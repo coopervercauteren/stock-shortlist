@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stock Shortlist – Free Daily Stock Screener</title>
+<meta name="description" content="Free stock screener that ranks 100 large US stocks every trading day by momentum, trend, relative strength and volatility. Pick an investing style and see the top picks instantly.">
+<meta name="keywords" content="stock screener, best stocks to buy, momentum stocks, low volatility stocks, S&P 500 stocks, stock rankings">
+<meta property="og:title" content="Stock Shortlist – Free Daily Stock Screener">
+<meta property="og:description" content="100 large US stocks ranked daily by momentum, trend and steadiness.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index,follow">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: control rail on the left, shortlist cards then full ranked table on the right; stacks to one column on phones */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#132030; --muted:#5C6A7C; --line:#DCE2EA;
+  --accent:#1D5FA8; --accent-soft:#E3ECF7; --up:#12804A; --down:#C0392B; --warn:#A86B00;
+  --display:"Manrope",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E141C; --surface:#161E29; --ink:#E6ECF3; --muted:#93A1B3; --line:#263242;
+  --accent:#6EA8F0; --accent-soft:#1B2B40; --up:#4CC487; --down:#F0776A; --warn:#E3A93B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E141C; --surface:#161E29; --ink:#E6ECF3; --muted:#93A1B3; --line:#263242;
+  --accent:#6EA8F0; --accent-soft:#1B2B40; --up:#4CC487; --down:#F0776A; --warn:#E3A93B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,4vw,36px);letter-spacing:-.02em;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.stamp{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-align:right}
+.stamp b{color:var(--ink);font-weight:500}
+.grid{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:880px){.rail{position:static}}
+.lbl{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.preset{border:1px solid var(--line);background:transparent;border-radius:7px;padding:8px 10px;text-align:left;font-size:13.5px;font-weight:500}
+.preset[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.preset small{display:block;color:var(--muted);font-weight:400;font-size:11.5px;line-height:1.3}
+.sl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;margin-bottom:10px}
+.sl label{font-size:13.5px}
+.sl output{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.sl input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 10px;font-size:12.5px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.toggle{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.toggle input{margin-top:4px;accent-color:var(--accent)}
+.note{font-size:12px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:14px;margin:0}
+main{display:flex;flex-direction:column;gap:28px;min-width:0}
+h2{font-family:var(--display);font-weight:700;font-size:19px;margin:0 0 12px;letter-spacing:-.01em}
+h2 span{font-family:var(--body);font-weight:400;font-size:13.5px;color:var(--muted);margin-left:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rank{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tk{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.nm{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score{font-family:var(--mono);font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:2px 7px;font-weight:500}
+.px{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.why{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none}
+.why li{font-size:11.5px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--muted)}
+.why li.good{color:var(--up);border-color:color-mix(in srgb,var(--up) 40%,transparent)}
+.why li.bad{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+svg.spark{width:100%;height:42px;display:block}
+.up{color:var(--up)} .down{color:var(--down)}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:780px;font-size:13.5px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
+th{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--surface)}
+th button{background:none;border:0;padding:0;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit}
+th button[data-dir]::after{content:attr(data-dir);margin-left:3px;color:var(--accent)}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.t{font-family:var(--body);font-weight:600}
+td.n{font-family:var(--body);color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:0}
+.bar{display:inline-block;width:56px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;margin-left:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.disc{font-size:12.5px;color:var(--muted);max-width:80ch;margin:0}
+.empty{color:var(--muted);padding:20px;text-align:center}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Stock Shortlist</h1>
+      <p class="sub">100 large US companies, ranked by price strength, trend and steadiness. Pick a style or set your own weights, and the shortlist re-ranks instantly.</p>
+    </div>
+    <div class="stamp" id="stamp">Loading prices…</div>
+  </header>
+
+  <div class="grid">
+    <aside class="rail" aria-label="Screen settings">
+      <div>
+        <p class="lbl">Investing style</p>
+        <div class="presets" id="presets"></div>
+      </div>
+      <div>
+        <p class="lbl">Weights</p>
+        <div id="sliders"></div>
+      </div>
+      <div>
+        <p class="lbl">Sectors</p>
+        <div class="chips" id="sectors"></div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="trendOnly" checked> Only stocks trading above their 200‑day average</label>
+      <p class="note">How the score works: each stock gets a 0–100 percentile on every factor versus the other 99, then the weighted average is rescaled to 0–100. Momentum uses the 12‑month return, skipping the latest month, which is the standard academic definition.</p>
+    </aside>
+
+    <main>
+      <section>
+        <h2>Top picks <span id="picksSub"></span></h2>
+        <div class="cards" id="cards"></div>
+      </section>
+      <section>
+        <h2>Full ranking <span id="tableSub"></span></h2>
+        <div class="tablebox"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      </section>
+      <p class="disc"><b>Not financial advice.</b> This is a price‑based screen: it measures how stocks have behaved, not what the businesses are worth, and past returns don't predict future ones. Use it to build a list worth researching, check earnings and valuation before buying, and consider a broad index fund for most of your money.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+const FACTORS = [
+  {k:"momentum", label:"Momentum (12‑1 mo)", hint:"Strong past‑year gains"},
+  {k:"relative", label:"Beats S&P 500 (6 mo)", hint:"Outperforming the market"},
+  {k:"trend", label:"Uptrend strength", hint:"Price vs 50/200‑day averages"},
+  {k:"steady", label:"Low volatility", hint:"Smaller daily swings"},
+  {k:"high", label:"Near 52‑week high", hint:"Little drawdown"},
+  {k:"dip", label:"Recent pullback", hint:"Down over the last month"},
+];
+const PRESETS = [
+  {id:"balanced", name:"Balanced", d:"Strength + steadiness", w:{momentum:3,relative:2,trend:2,steady:2,high:1,dip:0}},
+  {id:"momentum", name:"Momentum", d:"Ride the winners", w:{momentum:5,relative:4,trend:2,steady:0,high:2,dip:0}},
+  {id:"steady", name:"Steady", d:"Calm compounders", w:{momentum:1,relative:1,trend:2,steady:5,high:2,dip:0}},
+  {id:"dip", name:"Buy the dip", d:"Strong, but pulled back", w:{momentum:3,relative:1,trend:2,steady:1,high:0,dip:4}},
+];
+const state = {w:{...PRESETS[0].w}, preset:"balanced", sectors:new Set(), trendOnly:true, sort:{k:"score",dir:-1}};
+let DATA = null, SPY = null;
+
+const $ = s => document.querySelector(s);
+const pct = (x, d=1) => x==null ? "–" : (x>0?"+":"") + (x*100).toFixed(d) + "%";
+const cls = x => x==null ? "" : x>=0 ? "up" : "down";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function rankPct(arr, key){
+  const v = arr.map(s => s.raw[key]); const sorted = [...v].sort((a,b)=>a-b);
+  arr.forEach(s => { const i = sorted.indexOf(s.raw[key]); s.f[key] = sorted.length>1 ? i/(sorted.length-1)*100 : 50; });
+}
+
+function prepare(stocks){
+  const all = stocks.filter(s => s.sector !== "Benchmark");
+  all.forEach(s => {
+    s.raw = {
+      momentum: s.mom ?? 0,
+      relative: (s.r6m ?? 0) - (SPY.r6m ?? 0),
+      trend: (s.price/s.sma200 - 1) + 0.5*(s.sma50/s.sma200 - 1),
+      steady: -s.vol,
+      high: s.offHigh,
+      dip: -(s.r1m ?? 0),
+    };
+    s.f = {};
+  });
+  FACTORS.forEach(f => rankPct(all, f.k));
+  return all;
+}
+
+function score(list){
+  const tot = Object.values(state.w).reduce((a,b)=>a+b,0) || 1;
+  list.forEach(s => { s.score = FACTORS.reduce((a,f) => a + s.f[f.k]*state.w[f.k], 0) / tot; });
+  const max = Math.max(...list.map(s=>s.score)), min = Math.min(...list.map(s=>s.score));
+  list.forEach(s => s.score = max>min ? (s.score-min)/(max-min)*100 : 50);
+}
+
+function reasons(s){
+  const r = [];
+  if (s.mom > 0.25) r.push(["good", `Up ${(s.mom*100).toFixed(0)}% past year`]);
+  if (s.raw.relative > 0.05) r.push(["good", `Beat S&P by ${(s.raw.relative*100).toFixed(0)} pts (6 mo)`]);
+  if (s.price > s.sma200 && s.sma50 > s.sma200) r.push(["good", "Uptrend"]);
+  if (s.f.steady > 70) r.push(["good", "Low volatility"]);
+  if (s.offHigh > -0.03) r.push(["good", "At 52‑wk high"]);
+  if (s.r1m < -0.05) r.push(["", `Pulled back ${(s.r1m*100).toFixed(0)}% this month`]);
+  if (s.vol > 0.45) r.push(["bad", "Very volatile"]);
+  if (s.offHigh < -0.2) r.push(["bad", `${(s.offHigh*100).toFixed(0)}% off high`]);
+  return r.slice(0,4);
+}
+
+function spark(pts){
+  const w=200,h=42,p=2, mn=Math.min(...pts), mx=Math.max(...pts);
+  const x=i=>p+i*(w-2*p)/(pts.length-1), y=v=>h-p-(v-mn)/((mx-mn)||1)*(h-2*p);
+  const d = pts.map((v,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)).join("");
+  const up = pts[pts.length-1] >= pts[0];
+  const col = up ? "var(--up)" : "var(--down)";
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${d} L${x(pts.length-1)} ${h} L${x(0)} ${h}Z" fill="${col}" opacity=".12"/>
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+    <circle cx="${x(pts.length-1)}" cy="${y(pts[pts.length-1])}" r="2.5" fill="${col}"/></svg>`;
+}
+
+function filtered(){
+  return DATA.filter(s => (state.sectors.size===0 || state.sectors.has(s.sector)) && (!state.trendOnly || s.price > s.sma200));
+}
+
+function render(){
+  score(DATA);
+  const list = filtered();
+  const byScore = [...list].sort((a,b)=>b.score-a.score);
+  const top = byScore.slice(0,9);
+  $("#picksSub").textContent = list.length ? `${top.length} of ${list.length} that pass your filters` : "";
+  $("#cards").innerHTML = top.length ? top.map((s,i)=>`
+    <article class="card">
+      <div class="top"><span class="tk">${esc(s.sym)}</span><span class="score" title="Score out of 100">${s.score.toFixed(0)}</span></div>
+      <div class="nm" title="${esc(s.name)}"><span class="rank">#${i+1}</span> · ${esc(s.name)}</div>
+      ${spark(s.spark)}
+      <div class="px"><span>$${s.price.toFixed(2)}</span><span class="${cls(s.r12m)}">${pct(s.r12m,0)} 1y</span></div>
+      <ul class="why">${reasons(s).map(([c,t])=>`<li class="${c}">${esc(t)}</li>`).join("")}</ul>
+    </article>`).join("") : `<p class="empty">No stocks match. Turn on more sectors or uncheck the 200‑day filter.</p>`;
+
+  const cols = [["rank","#"],["sym","Ticker"],["name","Company"],["score","Score"],["price","Price"],["chg1d","Today"],["r1m","1 mo"],["r3m","3 mo"],["r12m","1 yr"],["vol","Volatility"],["offHigh","From high"]];
+  $("#tbl thead").innerHTML = "<tr>" + cols.map(([k,l]) => `<th>${k==="rank"?l:`<button data-k="${k}" ${state.sort.k===k?`data-dir="${state.sort.dir<0?"↓":"↑"}"`:""}>${l}</button>`}</th>`).join("") + "</tr>";
+  const rankOf = new Map(byScore.map((s,i)=>[s.sym,i+1]));
+  const {k,dir} = state.sort;
+  const rows = [...list].sort((a,b)=> (typeof a[k]==="string" ? a[k].localeCompare(b[k]) : (a[k]??-9)-(b[k]??-9)) * dir);
+  $("#tableSub").textContent = `${list.length} stocks`;
+  $("#tbl tbody").innerHTML = rows.map(s=>`<tr>
+    <td>${rankOf.get(s.sym)}</td><td class="t">${esc(s.sym)}</td><td class="n" title="${esc(s.name)} · ${esc(s.sector)}">${esc(s.name)}</td>
+    <td>${s.score.toFixed(0)}<span class="bar"><i style="width:${s.score.toFixed(0)}%"></i></span></td>
+    <td>$${s.price.toFixed(2)}</td><td class="${cls(s.chg1d)}">${s.chg1d>0?"+":""}${s.chg1d.toFixed(2)}%</td>
+    <td class="${cls(s.r1m)}">${pct(s.r1m)}</td><td class="${cls(s.r3m)}">${pct(s.r3m)}</td><td class="${cls(s.r12m)}">${pct(s.r12m)}</td>
+    <td>${(s.vol*100).toFixed(0)}%</td><td>${pct(s.offHigh)}</td></tr>`).join("") || `<tr><td colspan="11" class="empty">No stocks match your filters.</td></tr>`;
+}
+
+function buildControls(){
+  $("#presets").innerHTML = PRESETS.map(p=>`<button class="preset" data-p="${p.id}" aria-pressed="${state.preset===p.id}">${p.name}<small>${p.d}</small></button>`).join("");
+  $("#sliders").innerHTML = FACTORS.map(f=>`<div class="sl" title="${f.hint}"><label for="w-${f.k}">${f.label}</label><output id="o-${f.k}">${state.w[f.k]}</output><input type="range" id="w-${f.k}" min="0" max="5" step="1" value="${state.w[f.k]}" data-k="${f.k}"></div>`).join("");
+  const secs = [...new Set(DATA.map(s=>s.sector))];
+  $("#sectors").innerHTML = secs.map(s=>`<button class="chip" data-s="${esc(s)}" aria-pressed="${state.sectors.has(s)}">${esc(s)}</button>`).join("");
+}
+
+function syncControls(){
+  document.querySelectorAll(".preset").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===state.preset));
+  FACTORS.forEach(f=>{ $("#w-"+f.k).value = state.w[f.k]; $("#o-"+f.k).textContent = state.w[f.k]; });
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed", state.sectors.has(b.dataset.s)));
+}
+
+document.addEventListener("click", e=>{
+  const p = e.target.closest(".preset"); if (p){ const pr = PRESETS.find(x=>x.id===p.dataset.p); state.preset=pr.id; state.w={...pr.w}; if(pr.id==="dip") state.trendOnly=true; $("#trendOnly").checked=state.trendOnly; syncControls(); render(); return; }
+  const c = e.target.closest(".chip"); if (c){ const s=c.dataset.s; state.sectors.has(s)?state.sectors.delete(s):state.sectors.add(s); syncControls(); render(); return; }
+  const h = e.target.closest("th button"); if (h){ const k=h.dataset.k; state.sort = state.sort.k===k ? {k,dir:-state.sort.dir} : {k,dir:(k==="sym"||k==="name")?1:-1}; render(); }
+});
+document.addEventListener("input", e=>{
+  if (e.target.matches('input[type="range"]')){ state.w[e.target.dataset.k]=+e.target.value; state.preset=null; syncControls(); render(); }
+  if (e.target.id==="trendOnly"){ state.trendOnly=e.target.checked; render(); }
+});
+
+fetch("data.json").then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(d=>{
+  SPY = d.stocks.find(s=>s.sym==="SPY");
+  DATA = prepare(d.stocks);
+  const dt = new Date(d.asof*1000).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+  $("#stamp").innerHTML = `Prices as of <b>${dt}</b><br>S&amp;P 500 (SPY): <span class="${cls(SPY.r12m)}">${pct(SPY.r12m)}</span> past year`;
+  buildControls(); render();
+}).catch(()=>{ $("#stamp").textContent = "Couldn't load price data. Reload the page to try again."; });
+</script>
+<noscript><p style="padding:16px">Stock Shortlist needs JavaScript to rank stocks. Please enable it to see today's picks.</p></noscript>
+</body>
+</html>
