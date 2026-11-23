@@ -1,6 +1,6 @@
 # Stock Shortlist
 
-A free stock screener that ranks 100 large US stocks by momentum, trend, relative strength and volatility.
+A free stock screener that ranks the S&P 500 stocks by momentum, trend, relative strength and volatility.
 
 - `index.html` – the website (no build step)
 - `data.json` – the latest prices and stats, which the page loads
