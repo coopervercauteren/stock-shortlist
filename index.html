@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Stock Shortlist – Free Daily Stock Screener</title>
-<meta name="description" content="Free stock screener that ranks 100 large US stocks every trading day by momentum, trend, relative strength and volatility. Pick an investing style and see the top picks instantly.">
+<meta name="description" content="Free stock screener that ranks 100 large US stocks every trading day by momentum, trend, relative strength and volatility. Pick an investing style and see the top picks instantly, plus budget-friendly stocks under $20, $50 and $100.">
 <meta name="keywords" content="stock screener, best stocks to buy, momentum stocks, low volatility stocks, S&P 500 stocks, stock rankings">
 <meta property="og:title" content="Stock Shortlist – Free Daily Stock Screener">
 <meta property="og:description" content="100 large US stocks ranked daily by momentum, trend and steadiness.">
@@ -58,6 +58,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .note{font-size:12px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:14px;margin:0}
 main{display:flex;flex-direction:column;gap:28px;min-width:0}
 h2{font-family:var(--display);font-weight:700;font-size:19px;margin:0 0 12px;letter-spacing:-.01em}
+h2 #picksTitle{all:unset}
 h2 span{font-family:var(--body);font-weight:400;font-size:13.5px;color:var(--muted);margin-left:6px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -86,6 +87,12 @@ td.n{font-family:var(--body);color:var(--muted);max-width:200px;overflow:hidden;
 tr:last-child td{border-bottom:0}
 .bar{display:inline-block;width:56px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;margin-left:6px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 22px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font-family:var(--display);font-weight:700;font-size:15px;color:var(--muted);margin-bottom:-1px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab small{font-family:var(--body);font-weight:500;font-size:11px;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.caps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.buys{font-size:12px;color:var(--muted)}
 .disc{font-size:12.5px;color:var(--muted);max-width:80ch;margin:0}
 .empty{color:var(--muted);padding:20px;text-align:center}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
@@ -97,13 +104,22 @@ tr:last-child td{border-bottom:0}
   <header>
     <div>
       <h1>Stock Shortlist</h1>
-      <p class="sub">100 large US companies, ranked by price strength, trend and steadiness. Pick a style or set your own weights, and the shortlist re-ranks instantly.</p>
+      <p class="sub" id="sub">100 large US companies, ranked by price strength, trend and steadiness. Pick a style or set your own weights, and the shortlist re-ranks instantly.</p>
     </div>
     <div class="stamp" id="stamp">Loading prices…</div>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Lists">
+    <button class="tab" role="tab" id="tab-top" data-tab="top" aria-selected="true">Top picks</button>
+    <button class="tab" role="tab" id="tab-budget" data-tab="budget" aria-selected="false">Budget friendly<small>New</small></button>
+  </nav>
+
   <div class="grid">
     <aside class="rail" aria-label="Screen settings">
+      <div id="capBox" hidden>
+        <p class="lbl">Price per share</p>
+        <div class="caps" id="caps"></div>
+      </div>
       <div>
         <p class="lbl">Investing style</p>
         <div class="presets" id="presets"></div>
@@ -117,19 +133,19 @@ tr:last-child td{border-bottom:0}
         <div class="chips" id="sectors"></div>
       </div>
       <label class="toggle"><input type="checkbox" id="trendOnly" checked> Only stocks trading above their 200‑day average</label>
-      <p class="note">How the score works: each stock gets a 0–100 percentile on every factor versus the other 99, then the weighted average is rescaled to 0–100. Momentum uses the 12‑month return, skipping the latest month, which is the standard academic definition.</p>
+      <p class="note">How the score works: each stock gets a 0–100 percentile on every factor versus the other stocks in the list, then the weighted average is rescaled to 0–100. Momentum uses the 12‑month return, skipping the latest month, which is the standard academic definition.</p>
     </aside>
 
     <main>
       <section>
-        <h2>Top picks <span id="picksSub"></span></h2>
+        <h2><span id="picksTitle">Top picks</span> <span id="picksSub"></span></h2>
         <div class="cards" id="cards"></div>
       </section>
       <section>
         <h2>Full ranking <span id="tableSub"></span></h2>
         <div class="tablebox"><table id="tbl"><thead></thead><tbody></tbody></table></div>
       </section>
-      <p class="disc"><b>Not financial advice.</b> This is a price‑based screen: it measures how stocks have behaved, not what the businesses are worth, and past returns don't predict future ones. Use it to build a list worth researching, check earnings and valuation before buying, and consider a broad index fund for most of your money.</p>
+      <p class="disc"><b>Not financial advice.</b> This is a price‑based screen: it measures how stocks have behaved, not what the businesses are worth, and past returns don't predict future ones. Use it to build a list worth researching, check earnings and valuation before buying, and consider a broad index fund for most of your money. A lower share price doesn't make a stock better value, and many brokers sell fractional shares of any stock for as little as $1.</p>
     </main>
   </div>
 </div>
@@ -149,8 +165,9 @@ const PRESETS = [
   {id:"steady", name:"Steady", d:"Calm compounders", w:{momentum:1,relative:1,trend:2,steady:5,high:2,dip:0}},
   {id:"dip", name:"Buy the dip", d:"Strong, but pulled back", w:{momentum:3,relative:1,trend:2,steady:1,high:0,dip:4}},
 ];
-const state = {w:{...PRESETS[0].w}, preset:"balanced", sectors:new Set(), trendOnly:true, sort:{k:"score",dir:-1}};
-let DATA = null, SPY = null;
+const CAPS = [20, 50, 100];
+const state = {w:{...PRESETS[0].w}, preset:"balanced", sectors:new Set(), trendOnly:true, sort:{k:"score",dir:-1}, tab:"top", cap:50};
+let DATA = null, CORE = null, ALL = null, SPY = null;
 
 const $ = s => document.querySelector(s);
 const pct = (x, d=1) => x==null ? "–" : (x>0?"+":"") + (x*100).toFixed(d) + "%";
@@ -212,7 +229,8 @@ function spark(pts){
 }
 
 function filtered(){
-  return DATA.filter(s => (state.sectors.size===0 || state.sectors.has(s.sector)) && (!state.trendOnly || s.price > s.sma200));
+  return DATA.filter(s => (state.sectors.size===0 || state.sectors.has(s.sector)) && (!state.trendOnly || s.price > s.sma200)
+    && (state.tab!=="budget" || s.price <= state.cap));
 }
 
 function render(){
@@ -220,6 +238,8 @@ function render(){
   const list = filtered();
   const byScore = [...list].sort((a,b)=>b.score-a.score);
   const top = byScore.slice(0,9);
+  const budget = state.tab==="budget";
+  $("#picksTitle").textContent = budget ? `Best under $${state.cap}` : "Top picks";
   $("#picksSub").textContent = list.length ? `${top.length} of ${list.length} that pass your filters` : "";
   $("#cards").innerHTML = top.length ? top.map((s,i)=>`
     <article class="card">
@@ -227,8 +247,9 @@ function render(){
       <div class="nm" title="${esc(s.name)}"><span class="rank">#${i+1}</span> · ${esc(s.name)}</div>
       ${spark(s.spark)}
       <div class="px"><span>$${s.price.toFixed(2)}</span><span class="${cls(s.r12m)}">${pct(s.r12m,0)} 1y</span></div>
+      ${budget ? `<div class="buys">$100 buys ${Math.floor(100/s.price)} share${Math.floor(100/s.price)===1?"":"s"}</div>` : ""}
       <ul class="why">${reasons(s).map(([c,t])=>`<li class="${c}">${esc(t)}</li>`).join("")}</ul>
-    </article>`).join("") : `<p class="empty">No stocks match. Turn on more sectors or uncheck the 200‑day filter.</p>`;
+    </article>`).join("") : `<p class="empty">No stocks match. Raise the price limit, turn on more sectors or uncheck the 200‑day filter.</p>`;
 
   const cols = [["rank","#"],["sym","Ticker"],["name","Company"],["score","Score"],["price","Price"],["chg1d","Today"],["r1m","1 mo"],["r3m","3 mo"],["r12m","1 yr"],["vol","Volatility"],["offHigh","From high"]];
   $("#tbl thead").innerHTML = "<tr>" + cols.map(([k,l]) => `<th>${k==="rank"?l:`<button data-k="${k}" ${state.sort.k===k?`data-dir="${state.sort.dir<0?"↓":"↑"}"`:""}>${l}</button>`}</th>`).join("") + "</tr>";
@@ -247,18 +268,36 @@ function render(){
 function buildControls(){
   $("#presets").innerHTML = PRESETS.map(p=>`<button class="preset" data-p="${p.id}" aria-pressed="${state.preset===p.id}">${p.name}<small>${p.d}</small></button>`).join("");
   $("#sliders").innerHTML = FACTORS.map(f=>`<div class="sl" title="${f.hint}"><label for="w-${f.k}">${f.label}</label><output id="o-${f.k}">${state.w[f.k]}</output><input type="range" id="w-${f.k}" min="0" max="5" step="1" value="${state.w[f.k]}" data-k="${f.k}"></div>`).join("");
-  const secs = [...new Set(DATA.map(s=>s.sector))];
+  $("#caps").innerHTML = CAPS.map(c=>`<button class="preset" data-cap="${c}" aria-pressed="${state.cap===c}">Under $${c}</button>`).join("");
+  const secs = [...new Set(ALL.map(s=>s.sector))];
   $("#sectors").innerHTML = secs.map(s=>`<button class="chip" data-s="${esc(s)}" aria-pressed="${state.sectors.has(s)}">${esc(s)}</button>`).join("");
 }
 
 function syncControls(){
-  document.querySelectorAll(".preset").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===state.preset));
+  document.querySelectorAll("[data-p]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===state.preset));
+  document.querySelectorAll("[data-cap]").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.cap===state.cap));
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===state.tab));
+  $("#capBox").hidden = state.tab!=="budget";
+  $("#sub").textContent = state.tab==="budget"
+    ? `${ALL.length} US stocks, including lower-priced names, filtered to shares under $${state.cap}. Ranked the same way as Top picks.`
+    : `${CORE.length} large US companies, ranked by price strength, trend and steadiness. Pick a style or set your own weights, and the shortlist re-ranks instantly.`;
   FACTORS.forEach(f=>{ $("#w-"+f.k).value = state.w[f.k]; $("#o-"+f.k).textContent = state.w[f.k]; });
   document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed", state.sectors.has(b.dataset.s)));
 }
 
+function setTab(t){
+  state.tab = t==="budget" ? "budget" : "top";
+  DATA = state.tab==="budget" ? ALL : CORE;
+  const want = state.tab==="budget" ? "#budget" : "";
+  if (location.hash !== want) { try { history.replaceState(null, "", want || location.pathname + location.search); } catch(_) {} }
+  syncControls(); render();
+}
+window.addEventListener("hashchange", ()=>{ if (ALL) setTab(location.hash==="#budget" ? "budget" : "top"); });
+
 document.addEventListener("click", e=>{
-  const p = e.target.closest(".preset"); if (p){ const pr = PRESETS.find(x=>x.id===p.dataset.p); state.preset=pr.id; state.w={...pr.w}; if(pr.id==="dip") state.trendOnly=true; $("#trendOnly").checked=state.trendOnly; syncControls(); render(); return; }
+  const t = e.target.closest(".tab"); if (t){ setTab(t.dataset.tab); return; }
+  const cp = e.target.closest("[data-cap]"); if (cp){ state.cap=+cp.dataset.cap; syncControls(); render(); return; }
+  const p = e.target.closest("[data-p]"); if (p){ const pr = PRESETS.find(x=>x.id===p.dataset.p); state.preset=pr.id; state.w={...pr.w}; if(pr.id==="dip") state.trendOnly=true; $("#trendOnly").checked=state.trendOnly; syncControls(); render(); return; }
   const c = e.target.closest(".chip"); if (c){ const s=c.dataset.s; state.sectors.has(s)?state.sectors.delete(s):state.sectors.add(s); syncControls(); render(); return; }
   const h = e.target.closest("th button"); if (h){ const k=h.dataset.k; state.sort = state.sort.k===k ? {k,dir:-state.sort.dir} : {k,dir:(k==="sym"||k==="name")?1:-1}; render(); }
 });
@@ -269,10 +308,12 @@ document.addEventListener("input", e=>{
 
 fetch("data.json").then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(d=>{
   SPY = d.stocks.find(s=>s.sym==="SPY");
-  DATA = prepare(d.stocks);
+  CORE = prepare(d.stocks.filter(s => s.core !== false).map(s => ({...s})));
+  ALL = prepare(d.stocks.map(s => ({...s})));
+  DATA = CORE;
   const dt = new Date(d.asof*1000).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
   $("#stamp").innerHTML = `Prices as of <b>${dt}</b><br>S&amp;P 500 (SPY): <span class="${cls(SPY.r12m)}">${pct(SPY.r12m)}</span> past year`;
-  buildControls(); render();
+  buildControls(); setTab(location.hash==="#budget" ? "budget" : "top");
 }).catch(()=>{ $("#stamp").textContent = "Couldn't load price data. Reload the page to try again."; });
 </script>
 <noscript><p style="padding:16px">Stock Shortlist needs JavaScript to rank stocks. Please enable it to see today's picks.</p></noscript>

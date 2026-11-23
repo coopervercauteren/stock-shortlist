@@ -9,6 +9,17 @@ U = {
 "Energy & Utilities":"XOM CVX COP NEE SO DUK",
 "Real Estate & Materials":"PLD AMT LIN SHW",
 }
+# Extra lower-priced, widely held stocks used by the Budget tab (core list above is the main ranking)
+BUDGET = {
+"Technology":"INTC HPE HPQ NOK GLW DELL SNAP PINS RBLX U",
+"Communication":"WBD SIRI KHC CHTR LUMN",
+"Consumer":"F GM RIVN LCID CCL NCLH AAL DAL UAL JBLU KDP KVUE MO CAG GIS HRL WBA M",
+"Financials":"SOFI HOOD NU KEY HBAN RF CFG FITB USB TFC BEN IVZ AGNC NLY ALLY",
+"Health Care":"VTRS TEVA BMY CVS HLN",
+"Industrials":"GRAB UBER LYFT CSX JBLU",
+"Energy & Utilities":"KMI ET EPD OXY DVN CTRA BTU AES PCG EXC",
+"Real Estate & Materials":"VALE FCX NEM KGC CLF AA MPW O VICI",
+}
 S = requests.Session(); S.headers["User-Agent"]="Mozilla/5.0"
 def get(sym):
     for i in range(3):
@@ -20,6 +31,10 @@ def get(sym):
         except Exception as e: time.sleep(1+i)
     return sym, None, None
 syms = [(s,sec) for sec,v in U.items() for s in v.split()] + [("SPY","Benchmark")]
+CORE = {s for s,_ in syms}
+for sec,v in BUDGET.items():
+    for t in v.split():
+        if t not in CORE and t not in {x for x,_ in syms}: syms.append((t,sec))
 with cf.ThreadPoolExecutor(8) as ex: res = {s:(m,p) for s,m,p in ex.map(get,[s for s,_ in syms])}
 def ret(p,n,skip=0):
     c=[x[1] for x in p]; return c[-1-skip]/c[-1-n]-1 if len(c)>n else None
@@ -27,13 +42,13 @@ spy = res["SPY"][1]
 out=[]
 for s,sec in syms:
     m,p = res[s]
-    if not p: print("miss",s,file=sys.stderr); continue
+    if not p or len(p) < 130: print("skip",s,file=sys.stderr); continue
     c=[x[1] for x in p]
     dr=[c[i]/c[i-1]-1 for i in range(1,len(c))]
     vol=st.pstdev(dr[-126:])*math.sqrt(252)
     sma50=sum(c[-50:])/50; sma200=sum(c[-200:])/min(200,len(c))
     hi=max(c); r12=ret(p,len(c)-1)
-    d=dict(sym=s, name=m.get("longName") or m.get("shortName") or s, sector=sec, price=round(c[-1],2),
+    d=dict(sym=s, name=m.get("longName") or m.get("shortName") or s, sector=sec, core=s in CORE, price=round(c[-1],2),
       chg1d=round(m.get("regularMarketChangePercent") or 0,2),
       r1m=ret(p,21), r3m=ret(p,63), r6m=ret(p,126), r12m=r12, mom=ret(p,len(c)-1,21),
       vol=vol, sma50=sma50, sma200=sma200, offHigh=c[-1]/hi-1,
